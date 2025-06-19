@@ -13,7 +13,7 @@ const refreshAndSetTokens = async (res, refreshToken, userIdFromToken) => {
   try {
     verifiedRefresh = verifyToken(refreshToken, process.env.REFRESH_TOKEN_SECRET); // 
   } catch (refreshErr) {
-    console.log("Invalid refresh token"); // 
+    console.log("Invalid refresh token", refreshErr); // Added error logging
     return { status: 403, message: "Invalid refresh token" }; // 
   }
 

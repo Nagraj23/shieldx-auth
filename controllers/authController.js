@@ -235,7 +235,7 @@ exports.login = async (req, res) => {
     if (!isMatch) return res.status(400).json({ message: "Invalid credentials" });
 
     const accessToken = generateAccessToken(user._id);
-    const refreshToken = generateRefreshToken(user._id); // This function is assumed to be defined and correctly generates a token
+    const refreshToken = await generateRefreshToken(user._id); // Await the async function to ensure token is generated
 
     // Determine token expiration based on rememberMe
     // Note: expiresIn is in seconds for maxAge in cookie, but needs to be in milliseconds for new Date()
@@ -243,11 +243,17 @@ exports.login = async (req, res) => {
     const expiresInMs = expiresInSeconds * 1000;
 
     // Save refresh token to database
-    await new RefreshToken({
-      token: refreshToken,
-      userId: user._id,
-      expiresAt: new Date(Date.now() + expiresInMs),
-    }).save();
+    try {
+      await new RefreshToken({
+        token: refreshToken,
+        userId: user._id,
+        expiresAt: new Date(Date.now() + expiresInMs),
+      }).save();
+      console.log("Refresh token saved successfully for user:", user._id);
+    } catch (saveErr) {
+      console.error("Error saving refresh token:", saveErr);
+      return res.status(500).json({ message: "Failed to save refresh token" });
+    }
 
     // Set refresh token as an HTTP-only cookie
     // This is good for web browsers for security, but client-side app needs it in body too.
